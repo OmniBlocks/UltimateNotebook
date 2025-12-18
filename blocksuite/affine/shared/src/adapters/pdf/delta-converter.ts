@@ -5,9 +5,11 @@
 import { resolveCssVariable } from './css-utils.js';
 
 /**
- * Extract text from delta operations, preserving inline properties
- * Returns normalized format: string if simple, array if complex (with inline styles)
- */
+ * Convert a Quill-style delta (props.text.delta) into a normalized text representation with inline styling.
+ *
+ * @param props - Input object expected to contain a Quill-like delta at `props.text.delta`.
+ * @param configs - Map of configuration values; supports `docLinkBaseUrl` for constructing reference links and `title:<pageId>` entries to supply display titles for referenced pages.
+ * @returns A single space when no renderable content is present; a plain string when the result is a single unstyled segment; otherwise an array of strings and objects. Objects include a `text` property and optional inline styling fields such as `bold`, `italics`, `decoration`, `font`, `fontSize`, `color`, `background`, and `link`.
 export function extractTextWithInline(
   props: Record<string, any>,
   configs: Map<string, string>

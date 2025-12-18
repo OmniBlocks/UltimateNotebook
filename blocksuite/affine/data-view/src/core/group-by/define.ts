@@ -41,6 +41,14 @@ const WEEK_OPTS_SUN = { weekStartsOn: 0 } as const;
 const rangeLabel = (a: Date, b: Date) =>
   `${fmt(a, 'MMM d yyyy')} – ${fmt(b, 'MMM d yyyy')}`;
 
+/**
+ * Creates a date-focused GroupByConfig with common wiring for grouping and labeling dates.
+ *
+ * @param name - Identifier for the resulting group configuration
+ * @param grouper - Maps a date (milliseconds or null) to one or more group entries with `key` and numeric `value` (or `null` for ungrouped)
+ * @param groupName - Produces the display label for a group's numeric value (or `null` for ungrouped)
+ * @returns A GroupByConfig configured for date grouping and rendered with the date group view
+ */
 function buildDateCfg(
   name: string,
   grouper: (ms: number | null) => { key: string; value: number | null }[],

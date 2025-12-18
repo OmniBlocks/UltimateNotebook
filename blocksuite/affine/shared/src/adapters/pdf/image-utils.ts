@@ -5,7 +5,13 @@
 import { MAX_PAPER_HEIGHT, MAX_PAPER_WIDTH } from './utils.js';
 
 /**
- * Calculate image dimensions respecting props, original size, and paper constraints
+ * Compute target image width and height using provided block dimensions or fallbacks to original dimensions, then clamp to paper size limits preserving aspect ratio when necessary.
+ *
+ * @param blockWidth - Preferred width from layout; used if > 0
+ * @param blockHeight - Preferred height from layout; used if > 0
+ * @param originalWidth - Source image intrinsic width; used when `blockWidth` is not provided
+ * @param originalHeight - Source image intrinsic height; used when `blockHeight` is not provided
+ * @returns An object containing `width` and/or `height` (numbers) representing the computed dimensions; empty object if neither dimension can be determined
  */
 export function calculateImageDimensions(
   blockWidth: number | undefined,
@@ -54,7 +60,12 @@ export function calculateImageDimensions(
 }
 
 /**
- * Extract dimensions from SVG
+ * Parse an SVG source string and extract numeric width and height.
+ *
+ * If `width` or `height` attributes are missing, attempt to derive them from the SVG `viewBox`'s width and height when available.
+ *
+ * @param svgText - The SVG document text to parse
+ * @returns An object containing numeric `width` and/or `height` when found; properties are `undefined` if not present or not derivable
  */
 export function extractSvgDimensions(svgText: string): {
   width?: number;
@@ -87,7 +98,10 @@ export function extractSvgDimensions(svgText: string): {
 }
 
 /**
- * Extract dimensions from JPEG/PNG using Image API
+ * Extract the intrinsic width and height in pixels from an image Blob.
+ *
+ * @param blob - Image file blob (e.g., JPEG or PNG)
+ * @returns An object with `width` and `height` in pixels when available, or an empty object if dimensions could not be determined
  */
 export async function extractImageDimensions(
   blob: Blob

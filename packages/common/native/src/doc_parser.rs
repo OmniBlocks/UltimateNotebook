@@ -74,6 +74,17 @@ pub enum ParseError {
 }
 
 impl From<JwstCodecError> for ParseError {
+  /// Convert a `JwstCodecError` into a `ParseError::ParserError`.
+  ///
+  /// The conversion preserves the original error message by storing its string representation.
+  ///
+  /// # Examples
+  ///
+  /// ```
+  /// fn convert(e: JwstCodecError) -> ParseError {
+  ///     e.into()
+  /// }
+  /// ```
   fn from(value: JwstCodecError) -> Self {
     Self::ParserError(value.to_string())
   }
@@ -85,6 +96,27 @@ pub struct MarkdownResult {
   pub markdown: String,
 }
 
+/// Converts a serialized document binary into a Markdown representation and a document title.
+///
+/// Parses the provided document binary, traverses its block structure, and renders supported
+/// block types (pages, paragraphs, lists, code blocks, tables, databases, and embeds) into
+/// a single Markdown string. When `ai_editable` is true, top-level child blocks include an
+/// HTML comment with their `block_id` and `flavour` to aid downstream editing.
+///
+/// # Returns
+///
+/// `Ok(MarkdownResult)` containing the document `title` and rendered `markdown` on success,
+/// `Err(ParseError)` when the binary is invalid or the document cannot be parsed.
+///
+/// # Examples
+///
+/// ```
+/// use crate::{parse_doc_to_markdown, ParseError};
+///
+/// // invalid/empty binary yields an error
+/// let res = parse_doc_to_markdown(vec![], "doc-id".into(), false);
+/// assert!(matches!(res, Err(ParseError::InvalidBinary)));
+/// ```
 pub fn parse_doc_to_markdown(
   doc_bin: Vec<u8>,
   doc_id: String,
@@ -297,6 +329,24 @@ pub fn parse_doc_to_markdown(
   })
 }
 
+/// Computes the nesting depth of a list item by walking its ancestor chain and counting
+/// how many ancestor blocks have flavour `"affine:list"`.
+///
+/// # Returns
+///
+/// `usize` number of ancestor list blocks (the nesting depth).
+///
+/// # Examples
+///
+/// ```
+/// use std::collections::HashMap;
+/// // `Map` is the block map value type expected by `get_list_depth`.
+/// // Here we use empty maps to illustrate the call; an empty parent map yields depth 0.
+/// let parent_lookup: HashMap<String, String> = HashMap::new();
+/// let blocks: HashMap<String, y_octo::Map> = HashMap::new();
+/// let depth = crate::get_list_depth("some-block", &parent_lookup, &blocks);
+/// assert_eq!(depth, 0);
+/// ```
 fn get_list_depth(
   block_id: &str,
   parent_lookup: &HashMap<String, String>,
@@ -318,6 +368,32 @@ fn get_list_depth(
   depth
 }
 
+/// Parses an Affine document binary into a structured crawl representation containing blocks, title, and a text summary.
+///
+/// This function validates and decodes the provided document binary, traverses its block graph starting from the page root, and produces a CrawlResult that lists BlockInfo entries (with content, blobs, references and additional metadata), the document title, and a truncated textual summary.
+///
+/// # Parameters
+///
+/// - `doc_bin`: Binary payload of the Affine document (v1 format).
+/// - `doc_id`: Document identifier used when constructing the internal Doc context.
+///
+/// # Returns
+///
+/// A `CrawlResult` containing the collected blocks, the document title (defaults to `"Untitled"` when absent), and a summary string.
+///
+/// # Examples
+///
+/// ```no_run
+/// let bin: Vec<u8> = vec![/* Affine document binary */];
+/// let doc_id = "example-doc".to_string();
+/// match parse_doc_from_binary(bin, doc_id) {
+///     Ok(result) => {
+///         println!("Title: {}", result.title);
+///         println!("Blocks: {}", result.blocks.len());
+///     }
+///     Err(e) => eprintln!("Failed to parse document: {:?}", e),
+/// }
+/// ```
 pub fn parse_doc_from_binary(doc_bin: Vec<u8>, doc_id: String) -> Result<CrawlResult, ParseError> {
   if doc_bin.is_empty() || doc_bin == [0, 0] {
     return Err(ParseError::InvalidBinary);
@@ -523,6 +599,27 @@ pub fn parse_doc_from_binary(doc_bin: Vec<u8>, doc_id: String) -> Result<CrawlRe
   })
 }
 
+/// Extracts document IDs from an Affine binary document.
+///
+/// Parses the doc binary's `meta.pages` array and returns the page `id` values it contains.
+///
+/// # Parameters
+/// - `doc_bin`: Affine document binary (v1) to read page metadata from.
+/// - `include_trash`: if `true`, include pages marked as trashed; if `false`, omit trashed pages.
+///
+/// # Errors
+/// Returns `ParseError::InvalidBinary` when the binary is empty or cannot be parsed as an Affine doc.
+///
+/// # Returns
+/// A `Vec<String>` containing the page IDs found in `meta.pages`.
+///
+/// # Examples
+///
+/// ```rust
+/// let doc_bin = std::fs::read("fixtures/demo.ydoc").unwrap();
+/// let ids = get_doc_ids_from_binary(doc_bin, false).unwrap();
+/// assert!(ids.iter().all(|id| !id.is_empty()));
+/// ```
 pub fn get_doc_ids_from_binary(
   doc_bin: Vec<u8>,
   include_trash: bool,
@@ -566,6 +663,24 @@ pub fn get_doc_ids_from_binary(
   Ok(doc_ids)
 }
 
+/// Extracts the list of child block IDs from a block's `"sys:children"` entry.
+///
+/// Returns a vector of child IDs found in the block's `"sys:children"` array, or an empty vector if the key is absent or not an array.
+///
+/// # Examples
+///
+/// ```no_run
+/// use serde_json::json;
+/// use y_octo::Map;
+///
+/// // Construct a Map-like block with a "sys:children" array:
+/// let mut block: Map = serde_json::from_value(json!({
+///     "sys:children": ["id1", "id2", "id3"]
+/// })).unwrap();
+///
+/// let ids = collect_child_ids(&block);
+/// assert_eq!(ids, vec!["id1".to_string(), "id2".to_string(), "id3".to_string()]);
+/// ```
 fn collect_child_ids(block: &Map) -> Vec<String> {
   block
     .get("sys:children")
@@ -722,6 +837,24 @@ fn gather_database_texts(block: &Map) -> (Vec<String>, Option<String>) {
   (texts, database_title)
 }
 
+/// Collects non-empty cell text values from a block's keys named like `prop:cells.<id>.text`.
+///
+/// Scans the provided map for keys that start with `prop:cells.` and end with `.text`, converts
+/// their values to strings, and returns the non-empty results in the same order as the map's iteration.
+///
+/// # Examples
+///
+/// ```
+/// use serde_json::{Map, Value, json};
+/// let mut block = Map::new();
+/// block.insert("prop:cells.a.text".to_string(), json!("First"));
+/// block.insert("prop:cells.b.text".to_string(), json!(""));
+/// block.insert("prop:cells.c.text".to_string(), json!("Second"));
+/// block.insert("prop:title".to_string(), json!("Ignored"));
+///
+/// let contents = crate::gather_table_contents(&block);
+/// assert_eq!(contents, vec!["First".to_string(), "Second".to_string()]);
+/// ```
 fn gather_table_contents(block: &Map) -> Vec<String> {
   let mut contents = Vec::new();
   for key in block.keys() {
@@ -736,6 +869,31 @@ fn gather_table_contents(block: &Map) -> Vec<String> {
   contents
 }
 
+/// Formats a table cell value according to its column type and metadata.
+///
+/// For `"select"` and `"multi-select"` column types, this resolves option IDs
+/// to their display values using `col_data["options"]`. For other column
+/// types it converts the value to a string when possible.
+///
+/// # Returns
+///
+/// A `String` containing the formatted cell value. For unmatched select IDs or
+/// when expected structures are missing, returns an empty string; otherwise the
+/// resolved display text or a fallback string representation.
+///
+/// # Examples
+///
+/// ```
+/// use y_octo::Any;
+///
+/// // Default/value-to-string fallback
+/// let v = Any::String("plain".into());
+/// assert_eq!(format_cell_value(&v, "text", None), "plain");
+///
+/// // Unknown type without metadata returns stringified value
+/// let v2 = Any::Number(42.into());
+/// assert_eq!(format_cell_value(&v2, "unknown", None), "42");
+/// ```
 fn format_cell_value(value: &Any, col_type: &str, col_data: Option<&Map>) -> String {
   match col_type {
     "select" => {
@@ -786,6 +944,20 @@ fn format_cell_value(value: &Any, col_type: &str, col_data: Option<&Map>) -> Str
   }
 }
 
+/// Convert a `Value` into a `String` when a textual representation is available.
+///
+/// Attempts to extract text directly from the `Value` (`to_text`) and, if that
+/// is not available, converts the underlying `Any` representation (`to_any`)
+/// to a `String`. Returns `None` when the value cannot be represented as text.
+///
+/// # Examples
+///
+/// ```
+/// // Construct a text value (implementation may vary by `Value` constructors)
+/// let v = Value::from("hello");
+/// let s = value_to_string(&v);
+/// assert_eq!(s.as_deref(), Some("hello"));
+/// ```
 fn value_to_string(value: &Value) -> Option<String> {
   if let Some(text) = value.to_text() {
     return Some(text.to_string());

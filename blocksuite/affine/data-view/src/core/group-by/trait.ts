@@ -75,6 +75,12 @@ export class Group<
   }
 }
 
+/**
+ * Type guard that detects objects having an optional `groupProperties` array.
+ *
+ * @param data - Value to test for a `groupProperties` property
+ * @returns `true` if `data` is an object with a `groupProperties` property that is either `undefined` or an array of `GroupProperty`; `false` otherwise.
+ */
 function hasGroupProperties(
   data: unknown
 ): data is { groupProperties?: GroupProperty[] } {

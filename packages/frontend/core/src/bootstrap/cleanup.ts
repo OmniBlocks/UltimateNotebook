@@ -1,3 +1,15 @@
+/**
+ * Remove unused IndexedDB databases whose names match known legacy patterns.
+ *
+ * Deletes any database whose name:
+ * - ends with `:server-clock`
+ * - ends with `:sync-metadata`
+ * - starts with `idx:` and ends with `:block` or `:doc`
+ * - starts with `jp:`
+ *
+ * If IndexedDB is not available in the environment the function does nothing.
+ * If retrieving the list of databases fails, an error is logged to the console.
+ */
 function cleanupUnusedIndexedDB() {
   const indexedDB = window.indexedDB;
   if (!indexedDB) {

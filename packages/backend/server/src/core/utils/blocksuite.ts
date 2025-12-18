@@ -47,6 +47,14 @@ export interface ParsePageOptions {
   maxSummaryLength: number;
 }
 
+/**
+ * Extracts page title and textual summary from a Yjs document representing a page.
+ *
+ * @param doc - The Yjs document to parse for page blocks.
+ * @param opts - Options controlling summary extraction.
+ * @param opts.maxSummaryLength - Maximum number of characters to include in the summary; use `-1` to include full textual content.
+ * @returns The page's title and assembled summary, or `null` if the document is not a page or contains no root page block.
+ */
 export function parsePageDoc(
   doc: YDoc,
   opts: ParsePageOptions = { maxSummaryLength: 150 }
@@ -156,10 +164,22 @@ export function parsePageDoc(
   return content;
 }
 
+/**
+ * Extracts all document IDs referenced by a workspace root snapshot.
+ *
+ * @param snapshot - Binary snapshot of the workspace root document
+ * @returns An array of document IDs found in the snapshot
+ */
 export function readAllDocIdsFromWorkspaceSnapshot(snapshot: Uint8Array) {
   return readAllDocIdsFromRootDoc(Buffer.from(snapshot), false);
 }
 
+/**
+ * Parses a JSON string and returns the resulting value if parsing succeeds.
+ *
+ * @param str - The JSON string to parse
+ * @returns The parsed value cast to `T`, or `undefined` if parsing fails
+ */
 function safeParseJson<T>(str: string): T | undefined {
   try {
     return JSON.parse(str) as T;
@@ -168,6 +188,13 @@ function safeParseJson<T>(str: string): T | undefined {
   }
 }
 
+/**
+ * Parse a document snapshot and enrich its blocks with `docId`, `ref`, and parsed additional metadata.
+ *
+ * @param docId - Identifier of the document represented by the snapshot
+ * @param docSnapshot - Binary snapshot of the document
+ * @returns An object containing the parsed document data with a `blocks` array; each block preserves its original fields and additionally includes `docId`, `ref` (from `refInfo`), and `additional` parsed as JSON when present
+ */
 export async function readAllBlocksFromDocSnapshot(
   docId: string,
   docSnapshot: Uint8Array
@@ -187,6 +214,14 @@ export async function readAllBlocksFromDocSnapshot(
   };
 }
 
+/**
+ * Convert a serialized document snapshot into a plain title and Markdown content.
+ *
+ * @param docId - The document identifier used when parsing the snapshot.
+ * @param docSnapshot - Binary snapshot of the document (Yjs/Blocksuite format) as a Uint8Array.
+ * @param aiEditable - When true, include AI-editable transformations in the generated Markdown.
+ * @returns An object with `title` (document title) and `markdown` (document content as a Markdown string).
+ */
 export function parseDocToMarkdownFromDocSnapshot(
   docId: string,
   docSnapshot: Uint8Array,
