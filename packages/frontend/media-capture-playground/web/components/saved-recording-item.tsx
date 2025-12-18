@@ -570,7 +570,16 @@ function TranscribeButton({
   );
 }
 
-// Main SavedRecordingItem component (simplified)
+/**
+ * Render a saved recording card with playback, waveform, transcription, and delete controls.
+ *
+ * This component manages audio loading and processing (waveform generation), playback controls
+ * and state (current time, playback rate), transcription actions and status, deletion flow,
+ * and related UI sections (header, waveform visualizer, transcription panels).
+ *
+ * @param recording - The saved recording object (expected fields include `wav` filename, `metadata` with recording timestamps/duration, and optional `transcription` data).
+ * @returns A React element containing the full saved recording UI and its interactive behavior.
+ */
 export function SavedRecordingItem({
   recording,
 }: SavedRecordingItemProps): ReactElement {

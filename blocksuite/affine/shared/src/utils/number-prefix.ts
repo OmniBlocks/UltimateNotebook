@@ -1,3 +1,9 @@
+/**
+ * Converts a non-negative integer into a lowercase alphabetic sequence using `a`..`z`.
+ *
+ * @param n - The non-negative integer to convert (0 maps to `a`)
+ * @returns The lowercase alphabetic representation where `0` → `a`, `1` → `b`, and `26` → `aa`
+ */
 function number2letter(n: number) {
   const ordA = 'a'.charCodeAt(0);
   const ordZ = 'z'.charCodeAt(0);
@@ -10,7 +16,12 @@ function number2letter(n: number) {
   return s;
 }
 
-// Derive from https://gist.github.com/imilu/00f32c61e50b7ca296f91e9d96d8e976
+/**
+ * Convert a positive integer to its Roman numeral representation.
+ *
+ * @param num - The integer to convert; expected to be positive (values ≤ 0 produce an empty string)
+ * @returns The Roman numeral representation of `num` using standard symbols (e.g., `M`, `CM`, `D`, `CD`, `C`, `XC`, `L`, `XL`, `X`, `IX`, `V`, `IV`, `I`)
+ */
 function number2roman(num: number) {
   const lookup: Record<string, number> = {
     M: 1000,

@@ -8,6 +8,11 @@ import type { Store } from '@blocksuite/store';
 
 import { download } from './utils.js';
 
+/**
+ * Export the given document to a PDF file and trigger a download of the generated file.
+ *
+ * @param doc - The document store to export; its workspace data and provider are used to build the transformer, produce a snapshot, and generate the PDF
+ */
 async function exportDoc(doc: Store) {
   const provider = doc.provider;
   const job = doc.getTransformer([

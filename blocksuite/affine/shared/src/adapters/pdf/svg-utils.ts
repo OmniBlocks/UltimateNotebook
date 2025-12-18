@@ -5,7 +5,10 @@
 import { resolveCssVariable } from './css-utils.js';
 
 /**
- * Get SVG string for bulleted list icon based on depth
+ * Selects a bulleted list SVG icon variant based on list depth.
+ *
+ * @param depth - List nesting depth used to choose one of four bullet variants
+ * @returns The SVG markup for the selected bullet icon as a string
  */
 export function getBulletIconSvg(depth: number): string {
   const bulletIndex = depth % 4;
@@ -20,7 +23,10 @@ export function getBulletIconSvg(depth: number): string {
 }
 
 /**
- * Get SVG string for checkbox icon (checked or unchecked)
+ * Return the SVG markup for a checkbox icon that reflects the checked state.
+ *
+ * @param checked - If `true`, returns the filled (checked) checkbox SVG; if `false`, returns the outlined (unchecked) checkbox SVG
+ * @returns The SVG markup string for the checkbox icon
  */
 export function getCheckboxIconSvg(checked: boolean): string {
   if (checked) {
@@ -31,7 +37,10 @@ export function getCheckboxIconSvg(checked: boolean): string {
 }
 
 /**
- * Get SVG string for toggle icon (down or right)
+ * Provide an SVG chevron icon that reflects a toggle's expansion state.
+ *
+ * @param expanded - Whether the toggle is expanded; when true the icon is a downward-pointing chevron, otherwise a right-pointing chevron.
+ * @returns An SVG string representing a downward-pointing chevron when `expanded` is `true`, or a right-pointing chevron when `expanded` is `false`.
  */
 export function getToggleIconSvg(expanded: boolean): string {
   if (expanded) {

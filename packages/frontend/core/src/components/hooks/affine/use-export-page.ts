@@ -141,6 +141,13 @@ async function exportToMarkdown(doc: Store, std?: BlockStdScope) {
   }
 }
 
+/**
+ * Dispatches the requested export action for a document page based on the specified export type.
+ *
+ * @param page - The document page store to export.
+ * @param type - The export format to perform (`'html' | 'markdown' | 'snapshot' | 'pdf' | 'png' | 'pdf-export'`).
+ * @param editorContainer - The editor container providing editor-specific context required by some export handlers (for example, PDF printing).
+ */
 async function exportHandler({
   page,
   type,

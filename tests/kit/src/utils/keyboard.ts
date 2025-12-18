@@ -105,6 +105,15 @@ export async function undoByKeyboard(page: Page) {
 
 const clipboardMutex = new AsyncLock();
 
+/**
+ * Write the given text into the page's clipboard and optionally simulate pasting it into the focused element.
+ *
+ * The write is serialized with an internal mutex to avoid concurrent clipboard modifications. The function injects a synthetic `paste` event into the page with the provided text; if `paste` is `true` (default), it then triggers the platform-appropriate modifier plus `V` to perform a keyboard paste into the active element.
+ *
+ * @param page - Playwright page whose clipboard and input focus will be used
+ * @param text - Text to place into the clipboard and the synthetic paste event
+ * @param paste - Whether to simulate a keyboard paste after writing the clipboard (default: `true`)
+ */
 export async function writeTextToClipboard(
   page: Page,
   text: string,

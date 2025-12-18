@@ -78,6 +78,13 @@ const noteSlashMenuConfig: SlashMenuConfig = {
   ],
 };
 
+/**
+ * Create a slash-menu action item that converts the current block to a specified text flavour and type.
+ *
+ * @param config - Configuration describing the conversion target (includes name, flavour, type, icon, description, and optional `searchAlias`).
+ * @param group - Optional menu group identifier to place the action under.
+ * @returns A SlashMenuActionItem that is shown only if the target flavour exists in the schema and, when invoked, updates the current block to the configured flavour and type.
+ */
 function createConversionItem(
   config: TextConversionConfig,
   group?: SlashMenuItem['group']
