@@ -34,11 +34,11 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
-      - name: Build static app
+      - name: Build static web app
         env:
           STATIC_MODE: true
           NODE_ENV: production
-        run: yarn build
+        run: yarn affine @affine/web build
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
